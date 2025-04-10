@@ -29,7 +29,7 @@ def create_data():
     global start_id
     payload = {
         'id': start_id,
-        'room': room_data,
+        'location': room_data,
         'timestamp': time.asctime(),
         'temperature_c': int(round(temp_data , 0)), 
     }

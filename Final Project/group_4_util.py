@@ -22,10 +22,10 @@ start_id=111
 
 
 
-def print_data(data):
-    print(f"Sensor Reading #{data['id']}")
-    print(f"Location: {data['location']}")
-    print(f"Time: {data['timestamp']}")
-    print(f" Temperature: {data['temperature_c']} °C")
-    print("-" * 40)
+# def print_data(data):
+#     print(f"Sensor Reading #{data['id']}")
+#     print(f"Location: {data['location']}")
+#     print(f"Time: {data['timestamp']}")
+#     print(f" Temperature: {data['temperature_c']} °C")
+#     print("-" * 40)
     

@@ -18,12 +18,14 @@ class SmartHomePublisherGUI:
         self.root.geometry("400x300")
         self.root.resizable(False, False)
         
+        # Initialize raw temp data
+        self.sensor = Sensor()
+        self.raw_data = self.sensor.generate_data()
+        
         # Initialize MQTT client
         self.client = mqtt.Client()
         self.client.connect(BROKER, PORT, 60)
-        
-        # Initialize sensor and message ID
-        self.sensor = Sensor()
+    
         self.start_id = 111
         
         # Data points list
@@ -35,9 +37,6 @@ class SmartHomePublisherGUI:
         # Start displaying temperature in status
         self.display_temperature()
         
-        self.publish_data()
-        
-    
     def create_widgets(self):
         # Main frame
         main_frame = ttk.Frame(self.root, padding="20")
@@ -101,9 +100,10 @@ class SmartHomePublisherGUI:
     
     def generate_temperature(self):
         # Use the sensor to generate temperature data
-        raw_data = self.sensor.generate_date()
-        temp_data = raw_data.pop(0) if raw_data else self.sensor.generate_date()[0]
-        return round(temp_data, 1)
+        if not self.raw_data:
+                self.raw_data = self.sensor.generate_data()
+        temp_data = self.raw_data.pop(0)
+        return int(round(temp_data, 0))
     
     def add_data_point(self):
         # Check if manual temperature is entered
@@ -152,9 +152,30 @@ class SmartHomePublisherGUI:
             
         # Add to the end of the list (lower priority)
         self.data_points.append(data_point)
-            
-        # Update display
-        self.update_status_display()
+        
+        time.sleep(5)
+        
+        # Publish the data
+        try:
+            payload = {
+                'id': self.start_id,
+                'location': data_point['location'],
+                'timestamp': time.asctime(),  
+                'temperature_c': int(round(data_point['temperature_c'], 0)),
+            }
+                
+            self.start_id += 1
+                
+            json_payload = json.dumps(payload)
+            self.client.publish(TOPIC, json_payload)
+                
+            data_point['published_at'] = time.asctime()
+            self.update_status_display()
+                
+            print(f"Published to {TOPIC}: {json_payload}")
+        
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to publish data: {str(e)}")
         
         # Schedule next update (every 5 seconds)
         self.root.after(5000, self.display_temperature)
@@ -179,38 +200,6 @@ class SmartHomePublisherGUI:
         self.status_text.tag_configure('bold', font=('Arial', 10, 'bold'))
 
         self.status_text.configure(state=tk.DISABLED)
-    
-    def publish_data(self):
-        try:
-            if not self.data_points:
-                print("No data points available to publish")
-                return
-            
-            while self.data_points:
-                data_point = self.data_points.pop(0)
-                
-                payload = {
-                    'id': self.start_id,
-                    'location': data_point['location'],
-                    'timestamp': time.asctime(),  
-                    'temperature_c': int(round(data_point['temperature_c'], 0)),
-                }
-                
-                self.start_id += 1
-                
-                json_payload = json.dumps(payload)
-                self.client.publish(TOPIC, json_payload)
-                
-                data_point['published_at'] = time.asctime()
-                self.update_status_display()
-                
-                print(f"Published to {TOPIC}: {json_payload}")
-                
-                # Add a delay between publishing data points
-                time.sleep(1)  
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to publish data: {str(e)}")
     
     def on_closing(self):
         self.client.disconnect()

@@ -43,7 +43,7 @@ class Sensor:
         self.base += self.delta
         return max(0.0, min(1.0, self.base))
     
-    def generate_date(self) -> list[float]:
+    def generate_data(self) -> list[float]:
         sensor = Sensor()
 
         gen2_data = [sensor.generator_2() for _ in range(50)]
