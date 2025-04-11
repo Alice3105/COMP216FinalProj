@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import json
 import time
 import random
 import paho.mqtt.client as mqtt
@@ -31,6 +30,7 @@ class SmartHomePublisherGUI:
         
         # Data points list
         self.data_points = []
+        self.location = ['Kitchen', 'Living Room', 'Bedroom', 'Bathroom']
         
         # Initialize thread manager
         self.thread_manager = MQTTThreadManager(self.client, TOPIC)
@@ -70,7 +70,7 @@ class SmartHomePublisherGUI:
         
         self.location_var = tk.StringVar()
         self.location_combo = ttk.Combobox(location_frame, textvariable=self.location_var)
-        self.location_combo['values'] = ('Kitchen', 'Living Room', 'Bedroom', 'Bathroom')
+        self.location_combo['values'] = self.location
         self.location_combo.current(0)
         self.location_combo.pack(side=tk.LEFT, fill=tk.X, expand=True)
         
@@ -83,7 +83,7 @@ class SmartHomePublisherGUI:
         button_frame.pack(fill=tk.X, pady=10)
         
         # Generate button
-        self.gen_button = ttk.Button(button_frame, text="Generate Temp", command=self.add_data_point)
+        self.gen_button = ttk.Button(button_frame, text="Add data point", command=self.add_data_point)
         self.gen_button.pack(side=tk.LEFT, padx=(0, 5))
         
         # Status frame
@@ -103,14 +103,14 @@ class SmartHomePublisherGUI:
         self.status_text.configure(state=tk.DISABLED)  # Make read-only
     
     def generate_temperature(self):
-        # Use the sensor to generate temperature data
+        """ Use the sensor to generate temperature data """
         if not self.raw_data:
                 self.raw_data = self.sensor.generate_data()
         temp_data = self.raw_data.pop(0)
         return int(round(temp_data, 0))
     
     def add_data_point(self):
-        # Check if manual temperature is entered
+        """ Check if manual temperature is entered """
         try:
             if self.temp_var.get():
                 temperature = float(self.temp_var.get())
@@ -125,6 +125,7 @@ class SmartHomePublisherGUI:
         if not location:
             messagebox.showerror("Input Error", "Location cannot be empty")
             return
+        self.location_combo.appen
         
         # Create a data point and add it to the beginning of the list
         data_point = {
@@ -144,9 +145,9 @@ class SmartHomePublisherGUI:
         self.temp_var.set("")
     
     def display_temperature(self):
-        # Generate a new data point
+        """ Generate a new data point """
         temp = self.generate_temperature()
-        location = self.location_var.get() or "Default"
+        location = random.choice(self.location)
         data_point = {
             'location': location,
             'temperature_c': temp,

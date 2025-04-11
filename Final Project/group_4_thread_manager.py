@@ -2,6 +2,7 @@ import threading
 import queue
 import json
 import time
+import random
 import paho.mqtt.client as mqtt
 
 class MQTTWorkerThread:
@@ -43,10 +44,16 @@ class MQTTWorkerThread:
                     'thread': f"Thread-{self.thread_id}"
                 }
                 
-                # Publish
-                json_payload = json.dumps(payload)
-                self.client.publish(self.topic, json_payload)
-                print(f"Thread-{self.thread_id} published to {self.topic}: {json_payload}")
+                # Randomly miss about 1% of transmissions (non-deterministic)
+                if random.random() >= 0.01:  # 99% probability to publish
+                    # Publish
+                    json_payload = json.dumps(payload)
+                    self.client.publish(self.topic, json_payload)
+                    print(f"Thread-{self.thread_id} published to {self.topic}: {json_payload}")
+                else:
+                    # Simulating a missed transmission
+                    print(f"Thread-{self.thread_id} randomly missed transmission for payload ID {payload_id}")
+                
                 time.sleep(5)  # Simulate processing time
                 
                 # Mark task as done
@@ -86,11 +93,22 @@ class MQTTThreadManager:
             worker = MQTTWorkerThread(i, task_queue, self.client, self.topic)
             self.workers.append(worker)
     
-    def publish_data(self, data_point, start_id):
-        """Add a publishing task to each worker's queue"""
-        for i in range(self.num_workers):
-            # Send the data point and a unique ID to the worker
-            self.task_queues[i].put((data_point, start_id + i))
+    def publish_data(self, data_points, start_id=0):
+        """
+        Distribute data points among worker threads
+        
+        Parameters:
+        - data_points: Single data point or list of data points to publish
+        - start_id: Starting ID for the first data point
+        """
+        # Convert single data point to list if needed
+        if not isinstance(data_points, list):
+            data_points = [data_points]
+            
+        # Distribute data points to workers
+        for idx, data_point in data_points:
+            worker_idx = idx % self.num_workers
+            self.task_queues[worker_idx].put((data_point, start_id + idx))
     
     def stop_all(self):
         """Stop all worker threads"""
