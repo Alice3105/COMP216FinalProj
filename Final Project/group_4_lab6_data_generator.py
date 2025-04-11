@@ -11,8 +11,8 @@ import random
 # Sensor measures temperature of the pavement throughout the day
 class Sensor:
     def __init__(self):
-        self.high_value = 40
-        self.low_value = 15
+        self.high_value = 50
+        self.low_value = 10
 
         self.base = 0.5
         self.delta = 0.02

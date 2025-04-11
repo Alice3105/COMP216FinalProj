@@ -7,13 +7,19 @@ Created on Wed Apr  9 09:28:24 2025
 
 import json
 import paho.mqtt.client as mqtt
-from group_4_util import print_data
+
 
 
 BROKER='test.mosquitto.org'
 PORT=1883
 TOPIC='group4/smart_home'
 
+def print_data(data):
+    print(f"Sensor Reading #{data['id']}")
+    print(f"Location: {data['location']}")
+    print(f"Time: {data['timestamp']}")
+    print(f" Temperature: {data['temperature_c']} °C")
+    print("-" * 40)
 
 def on_message(client, userdata, msg):
     try:

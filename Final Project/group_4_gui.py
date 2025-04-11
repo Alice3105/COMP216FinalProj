@@ -5,6 +5,7 @@ import time
 import random
 import paho.mqtt.client as mqtt
 from group_4_lab6_data_generator import Sensor
+from group_4_thread_manager import MQTTThreadManager
 
 # MQTT Configuration
 BROKER = 'test.mosquitto.org'
@@ -23,13 +24,16 @@ class SmartHomePublisherGUI:
         self.raw_data = self.sensor.generate_data()
         
         # Initialize MQTT client
-        self.client = mqtt.Client()
+        self.client = mqtt.Client(2)
         self.client.connect(BROKER, PORT, 60)
     
         self.start_id = 111
         
         # Data points list
         self.data_points = []
+        
+        # Initialize thread manager
+        self.thread_manager = MQTTThreadManager(self.client, TOPIC)
         
         # Create GUI elements
         self.create_widgets()
@@ -153,32 +157,26 @@ class SmartHomePublisherGUI:
         # Add to the end of the list (lower priority)
         self.data_points.append(data_point)
         
-        time.sleep(5)
-        
-        # Publish the data
-        try:
-            payload = {
-                'id': self.start_id,
-                'location': data_point['location'],
-                'timestamp': time.asctime(),  
-                'temperature_c': int(round(data_point['temperature_c'], 0)),
-            }
-                
-            self.start_id += 1
-                
-            json_payload = json.dumps(payload)
-            self.client.publish(TOPIC, json_payload)
-                
-            data_point['published_at'] = time.asctime()
-            self.update_status_display()
-                
-            print(f"Published to {TOPIC}: {json_payload}")
-        
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to publish data: {str(e)}")
-        
+        # Publish the data using three separate threads
+        self.publish_data(data_point)
+       
         # Schedule next update (every 5 seconds)
         self.root.after(5000, self.display_temperature)
+        
+    def publish_data(self, data_point):
+        try:
+            # Use thread manager to publish data
+            self.thread_manager.publish_data(data_point, self.start_id)
+            
+            # Increment ID after queuing all tasks
+            self.start_id += 3
+            
+            # Update display only from main thread
+            data_point['published_at'] = time.asctime()
+            self.update_status_display()
+        
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to publish data: {str(e)}")        
     
     def update_status_display(self):
         # Enable text widget for editing
@@ -202,6 +200,9 @@ class SmartHomePublisherGUI:
         self.status_text.configure(state=tk.DISABLED)
     
     def on_closing(self):
+        # Stop all worker threads
+        self.thread_manager.stop_all()
+                
         self.client.disconnect()
         print("Disconnected from broker.")
         self.root.destroy()
