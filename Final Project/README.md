@@ -1,6 +1,6 @@
 # Smart Home IoT System
 
-This project implements an end-to-end IoT solution using MQTT protocol for a smart home temperature monitoring system. The system consists of publishers that send temperature data and subscribers that receive and visualize the data. The system also includes a broker, publishers, and subscribers. About the process, the publisher sends data to the broker and the subscriber receives the data from the broker. The subscriber can also visualize the data in a chart. The publisher is a GUI-based publisher that allows the user to manually generate data or automatically generate data. The subscriber is a GUI-based subscriber that allows the user to visualize the data. The system also includes a GUI for the publishers and subscribers.  
+This project implements an end-to-end IoT solution using MQTT protocol for a smart home temperature monitoring system. The system consists of publishers that send temperature data and subscribers that receive and visualize the data (like people in a house that as subscribers want to know the temperature from different locations (publishers)). Therefore, the system includes a broker, publishers, and subscribers. In summary, about the process, the publisher sends data to the broker and the subscriber receives the data from the broker. The subscriber can also visualize the data in a chart. The publisher is a GUI-based publisher that allows the user to manually generate data or automatically generate data. The subscriber is a GUI-based subscriber that allows the user to visualize the data.
 
 
 ## Components
