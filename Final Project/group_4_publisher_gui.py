@@ -125,7 +125,6 @@ class SmartHomePublisherGUI:
         if not location:
             messagebox.showerror("Input Error", "Location cannot be empty")
             return
-        self.location_combo.appen
         
         # Create a data point and add it to the beginning of the list
         data_point = {
@@ -135,11 +134,14 @@ class SmartHomePublisherGUI:
             'source': 'manual'
         }
         
-        # Add to the beginning of the list
-        self.data_points.insert(0, data_point)
+        # Add to the list in the same way as automatic entries
+        self.data_points.append(data_point)
         
         # Update display
         self.update_status_display()
+        
+        # Publish the manual data point
+        self.publish_data(data_point)
         
         # Clear temperature field
         self.temp_var.set("")
@@ -155,7 +157,7 @@ class SmartHomePublisherGUI:
             'source': 'auto'
         }
             
-        # Add to the end of the list (lower priority)
+        # Add to the list
         self.data_points.append(data_point)
         
         # Publish the data using three separate threads
@@ -186,10 +188,13 @@ class SmartHomePublisherGUI:
         # Clear current content
         self.status_text.delete(1.0, tk.END)
         
+        # Sort data points by timestamp in reverse order (newest first)
+        sorted_data = sorted(self.data_points, key=lambda x: x['timestamp'], reverse=True)
+        
         # Add each data point to the display
-        for i, point in enumerate(self.data_points): 
+        for i, point in enumerate(sorted_data):
             source_marker = " (manual)" if point['source'] == 'manual' else ""
-            line = f"{i+1}. {point['location']}: {point['temperature_c']}°C - {point['timestamp']}{source_marker}\n"
+            line = f"{point['location']}: {point['temperature_c']}°C - {point['timestamp']}{source_marker}\n"
             # Make manual entries bold
             if point['source'] == 'manual':
                 self.status_text.insert(tk.END, line, 'bold')

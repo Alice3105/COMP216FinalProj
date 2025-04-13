@@ -41,7 +41,8 @@ class MQTTWorkerThread:
                     'location': data_point['location'],
                     'timestamp': time.asctime(),
                     'temperature_c': int(round(data_point['temperature_c'], 0)),
-                    'thread': f"Thread-{self.thread_id}"
+                    'thread': f"Thread-{self.thread_id}",
+                    'source': data_point.get('source', 'auto')  # Include source information
                 }
                 
                 # Randomly miss about 1% of transmissions (non-deterministic)
@@ -106,7 +107,7 @@ class MQTTThreadManager:
             data_points = [data_points]
             
         # Distribute data points to workers
-        for idx, data_point in data_points:
+        for idx, data_point in enumerate(data_points):
             worker_idx = idx % self.num_workers
             self.task_queues[worker_idx].put((data_point, start_id + idx))
     

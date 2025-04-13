@@ -141,6 +141,9 @@ class SmartHomePublisherGUI:
         # Update display
         self.update_status_display()
         
+        # Publish the manual data point
+        self.publish_data(data_point)
+        
         # Clear temperature field
         self.temp_var.set("")
     
